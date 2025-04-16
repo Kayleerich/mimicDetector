@@ -2,16 +2,14 @@
 mimicDetector identifies small regions of pathogen proteins that share high sequence similarity to proteins of their host. Our goal is to narrow the search for mimicry from millions of potential regions to a quantity that is more manageable for manual curation. 
 
 ## Running the pipeline
-The pipeline requires >=Python3.6 as well as pre-installation of [POPScomp](https://github.com/Fraternalilab/POPScomp). The other programs/packages can be installed into a new conda environment using the [snake_mimics.yml](env/snake_mimics.yml) file:  
-`conda env create -f snake_mimics.yml`
+The pipeline requires >=Python3.6 as well as pre-installation of [POPScomp](https://github.com/Fraternalilab/POPScomp). The other programs/packages can be installed into a new conda environment using the [snake_mimics.yml](env/snake_mimics.yml) file: `conda env create -f snake_mimics.yml`
 
 ### Basic usage
 The pipeline is contained in a Snakemake workflow, and requires a custom configuration file to be passed via `--configfile`:  
 `snakemake -s mimicDetector.smk --configfile path/to/outdir/config.yaml`
 
 ### Create the configuration file for mimicDetector
-All of the parameters required to run the pipeline are found in the config.yaml file in the output directory, which needs to be created using the `mimic_configuration.py` script. The only parameters that are absolutely required are a single species for `--host_species` and at least one species for each of `--pathogen_species` and `--control_species`:  
-`python mimic_configuration.py -p PATHOGEN(S) -s HOST -c CONTROL(S)`  
+All of the parameters required to run the pipeline are found in the config.yaml file in the output directory, which needs to be created using [mimic_configuration.py](mimic_configuration.py). The only parameters that are absolutely required are a single species for `--host_species` and at least one species for each of `--pathogen_species` and `--control_species`: `python mimic_configuration.py -p PATHOGEN(S) -s HOST -c CONTROL(S)`  
 
 Example: specify multiple pathogen species. Each of these pathogen species will be run through the pipeline separately  
 `python mimic_configuration.py -p pathogen_speciesA pathogen_speciesB pathogen_speciesC -s host_species -c control_species`  
@@ -79,9 +77,10 @@ The "controls" directory should contain a FASTA file for each of the control spe
 |   │   ├── control2_name.fasta
 |   │   ├── ...
 ```
+  
 After the pipeline has finished, there will be a directory for each of the pathogen species as well as for the host species. 
 Files are named according to the parameters specified in the config.yaml file.  
-The final output (`*_paired_mimics.tsv`) contains 10 columns: `pathogen_prot, pathogen_start, pathogen_end, pathogen_sequence, pathogen_qsasa, host_prot, host_start, host_end, host_sequence, host_qsasa` where pathogen_start/pathogen_end and host_start/host_end are the start and end protein coordinates for each mimicry candidate, and pathogen_qsasa/host_qsasa are the average QSASA for those sequence ranges
+The final output (`*_paired_mimics.tsv`) contains 10 columns: `pathogen_prot, pathogen_start, pathogen_end, pathogen_sequence, pathogen_qsasa, host_prot, host_start, host_end, host_sequence, host_qsasa` where pathogen_start/pathogen_end and host_start/host_end are the start and end protein coordinates (inclusive) for each mimicry candidate, and pathogen_qsasa/host_qsasa are the average QSASA for all residues in those sequence ranges.
 ```
 ├── outdir
 │   ├── config.yaml
