@@ -14,28 +14,28 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--indir', metavar='INDIR', required=False, 
                         help='Directory containing all FASTA files (default is current directory)') 
     parser.add_argument('-o', '--outdir', metavar='', type=str, required=False, 
-                        help='Directory to save output files (default is current directory)') 
+                        help='Directory to save output files (default is <cwd>/mimicDetector/<date>/)') 
     parser.add_argument('-f', '--fileid', metavar='', type=str, required=False, 
-                        help='Name for output files')
+                        help='Name/identifier for output files')
     parser.add_argument('--control_name', metavar='', type=str, required=False, 
                         help='Abbreviated name for controls set')
     ## group=parameters
     parser.add_argument('-k', '--k_size', metavar='', type=int, required=False, 
-                        help='(default is k=12)')
+                        help='INT, Length of k-mer, i.e. sequence fragment, to use (default is k=12)')
     parser.add_argument('-b', '--bitscore_diff', metavar='', type=int, required=False, 
-                        help='(default is b=2)')
+                        help='NUM >=0, Minimum difference in bitscore between pathogen-host and pathogen-control blastp hits (default is b=2)')
     parser.add_argument('--min_bitscore', metavar='', type=int, required=False, 
-                        help='(default is 30)') 
+                        help='NUM >=0, Minimum bitscore allowed for pathogen-host blastp hits (default is 30)') 
     parser.add_argument('-e', '--min_evalue', metavar='', type=float, required=False, 
-                        help='(default is e=0.01)')
+                        help='FLOAT between 0 and 1, Maximum E-value allowed for pathogen-host blastp hits (default is e=0.01)')
     parser.add_argument('-q', '--min_qsasa', metavar='', type=float, required=False, 
-                        help='(default is q=0.50)')
+                        help='FLOAT between 0 and 1, Minimum average solvent accessibility required for mimicry candidates (default is q=0.75)')
     parser.add_argument('-l', '--max_lcr', metavar='', type=float, required=False, 
-                        help='(default is l=0.75)')
+                        help='FLOAT between 0 and 1, Maximum low-complexity region overlap allowed for mimicry candidates (default is l=0.50)')
     parser.add_argument('--mask', metavar='', type=str, required=False, 
-                        help='Single character string (i.e. X), default is lowercase')
+                        help='Single character string (i.e. X, default is lowercase)')
     parser.add_argument('--min_unmasked', metavar='', type=int, required=False, 
-                        help='Minimum number of unmasked aa in k-mer (default: k_size/2)')
+                        help='INT < k_size, Minimum number of unmasked aa in k-mer (default: k_size/2)')
     parser.add_argument('-t', '--max_threads', metavar='', type=int, required=False, 
                         help='Maximum number of threads to use during workflow (default: 8)')
     parser.add_argument('--force', action='store_true', required=False, 
