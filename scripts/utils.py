@@ -1,9 +1,8 @@
 from pathlib import Path
-import yaml
-import os, inspect
+import os
 import glob
 from time import strftime
-import pandas as pd
+
 
 def dir_empty(dir_path):
         return not next(os.scandir(dir_path), None)
@@ -13,19 +12,6 @@ def write_log(log_file, log_msg):
         lg.write(log_msg)
     return
 
-def load_config(yml):
-    if Path(yml).exists():
-        with open(Path(yml), 'r') as f:
-            config_dict = yaml.safe_load(f)
-    else:
-        err_msg = ''.join(['Cannot find the configuration file ',
-                           str(Path(yml)), 
-                           '\n\tCheck that you specified the correct path or, ', 
-                           'to make the configuration file, see mimicDetector/mimic_configuration.py --help  '])
-        raise FileNotFoundError(err_msg)
-    log_file = f"{Path(yml).parent}/{config_dict['fileid']}{config_dict['date']}.log" 
-    return config_dict, log_file
-
 def make_config_file(args):
     def _check_output(outdir, fileid, force):
         if not outdir:
@@ -33,7 +19,7 @@ def make_config_file(args):
         else:
             outdir = str(Path(outdir).resolve())
 
-        if not Path(f'{outdir}/config.yaml').exists(): # ! json
+        if not Path(f'{outdir}/config.yaml').exists(): 
             try:
                 Path(outdir).mkdir(parents=True)
             except FileExistsError:
@@ -51,9 +37,11 @@ def make_config_file(args):
         return outdir, config_file, log_file
     
     config_dict = {}
-    ## to get values from or update a given config file: 
-    ## (to update the same file do not give an output directory and use --force)
     if args.yaml:
+        err_str='Sorry, this feature is still under construction!'
+        raise NotImplementedError(err_str)
+        ## to get values from or update a given config file: 
+        ## (to update the same file do not give an output directory and use --force)
         with open(Path(args.yaml), 'r') as f:
             config_file_dict = yaml.safe_load(f) #json.load(f)
         config_dict = {k:'' for k in config_file_dict.keys()}
@@ -94,27 +82,25 @@ def make_config_file(args):
                 config_dict['log_file'] = f"{outdir}/{config_dict['fileid']}{config_dict['date']}.log"
                 config_dict['outdir'], config_file, config_dict['log_file'] = _check_output(outdir, config_dict['fileid'], args.force)
     else:
-        config_dict['host_name'] = args.host_species if args.host_species else [d.split('/')[-1].split('.')[0] for d in glob.glob(f"{config_dict['indir']}/host/*.fa*")][0]
-        config_dict['k'] = int(args.k_size) if args.k_size else int(12)
-        config_dict['fileid'] = f"{args.fileid}.{config_dict['k']}mers_" if args.fileid else f"{config_dict['host_name']}.{config_dict['k']}mers_"
         config_dict['date'] = str(strftime("%b%d_%Y"))
-        config_dict['outdir'], config_file, config_dict['log_file'] = _check_output(args.outdir, config_dict['fileid'], args.force)
         config_dict['indir'] = str(Path(args.indir).resolve()) if args.indir else Path.cwd().resolve()
-        config_dict['indir_rel'] = str(os.path.relpath(Path(args.indir).resolve(), start=Path(inspect.getfile(inspect.currentframe())).resolve().parent))
-        config_dict['mdpath'] = str(Path(inspect.getfile(inspect.currentframe())).parent)
+        config_dict['patho_species'] = args.pathogen_species if args.pathogen_species else [d for d in filter(os.path.isdir, 
+                                                                                                              os.listdir(config_dict['indir'])) if d not in ['host', 'controls']]
+        config_dict['host_name'] = args.host_species if args.host_species else [d.split('/')[-1].split('.')[0] for d in glob.glob(f"{config_dict['indir']}/host/*.fa*")][0]
+        config_dict['control_species'] = args.control_species if args.control_species else [d.split('/')[-1].split('.')[0] for d in glob.glob(f"{config_dict['indir']}/controls/*.fa*")]
+        config_dict['control_name'] = args.control_name if args.control_name else f"{len(args.control_species)}CtrlSpp" if len(args.control_species) > 1 else args.control_species[0]
+        config_dict['k'] = int(args.k_size) if args.k_size else int(12)
         config_dict['n'] = int(round(args.min_unmasked)) if args.min_unmasked else int(round(config_dict['k']/2))
         config_dict['mask'] = args.mask if args.mask else 'lowercase'
+        config_dict['fileid'] = f"{args.fileid}.{config_dict['k']}mers_" if args.fileid else f"{config_dict['host_name']}.{config_dict['k']}mers_"
+        config_dict['outdir'], config_file, config_dict['log_file'] = _check_output(args.outdir, config_dict['fileid'], args.force)
         config_dict['bit_min'] = int(args.min_bitscore) if args.min_bitscore else int(30)
         config_dict['bit_diff'] = int(args.bitscore_diff) if args.bitscore_diff else int(2)
         config_dict ['min_e'] = args.min_evalue if args.min_evalue else 0.01
-        config_dict['qsasa'] = args.min_qsasa if args.min_qsasa else 0.75
-        config_dict['lcr'] = args.max_lcr if args.max_lcr else 0.50
-        config_dict['control_species'] = args.control_species if args.control_species else [d.split('/')[-1].split('.')[0] for d in glob.glob(f"{config_dict['indir']}/controls/*.fa*")]
-        config_dict['control_name'] = args.control_name if args.control_name else f"{len(args.control_species)}CtrlSpp" if len(args.control_species) > 1 else args.control_species[0]
-        config_dict['patho_species'] = args.pathogen_species if args.pathogen_species else [d for d in filter(os.path.isdir, 
-                                                                                                              os.listdir(config_dict['indir'])) if d not in ['host', 'controls']]
-    config_dict['e_str'] = str('{:,g}'.format(config_dict ['min_e'])).split('.')[1]
+        config_dict['qsasa'] = args.min_qsasa if args.min_qsasa else 0.50
+        config_dict['lcr'] = args.max_lcr if args.max_lcr else 0.75
     config_dict['b_str'] = str(config_dict['bit_diff'])
+    config_dict['e_str'] = str('{:,g}'.format(config_dict ['min_e'])).split('.')[1]
     config_dict['q_str'] = str('{:.2f}'.format(round(config_dict['qsasa'], ndigits=2))).split('.')[1]
     config_dict['l_str'] = str('{:.2f}'.format(round(config_dict['lcr'], ndigits=2))).split('.')[1]
     config_dict['runidI'] = f"{config_dict['fileid']}b{str(config_dict['bit_diff'])}_e{config_dict['e_str']}" 
@@ -123,18 +109,17 @@ def make_config_file(args):
     config_dict['max_threads'] = args.max_threads if args.max_threads else 8
     characters = 0
 
-    def _fasta_reader(file):
-        fasta_df = pd.read_csv(file, sep='>', lineterminator='>', header=None)
-        fasta_df[['Accession', 'Sequence']] = fasta_df[0].str.split('\n', n=1, expand=True)
-        fasta_df.drop(0, axis=1, inplace=True)
-        fasta_df['Sequence'] = fasta_df['Sequence'].replace('\n', '', regex=True)
-        return fasta_df
+
     
     # combine all control species fasta files into single file
-    controls_fasta = [Path(f"{config_dict['indir']}/controls", f'{f}.fasta') for f in config_dict['control_species']]
-    df = pd.concat(_fasta_reader(i) for i in controls_fasta)
-    df['Accession'] = '>' + df['Accession']
-    df.to_csv(f"{config_dict['indir']}/controls/{config_dict['control_name']}.fasta", sep='\n', index=None, header=None)
+    control_files = [Path(f"{config_dict['indir']}/controls", f'{f}.fasta') for f in config_dict['control_species']]
+    cat_fasta = f"{config_dict['indir']}/controls/{config_dict['control_name']}.fasta"
+    with open(cat_fasta, 'a') as c:
+        for file in control_files:
+            with open(file, "r") as f:
+                fasta = f.read()
+                c.write(fasta)
+    
 
     # check that host and control fasta files exist and get combined database size
     for db in [('host', 'host_name'), ('controls', 'control_name')]:
@@ -153,5 +138,13 @@ def make_config_file(args):
     config_dict['dbsize'] = characters
     
     with open(Path(config_file), "w") as f:
-        yaml.dump(config_dict, f) 
+        for k,v in config_dict.items():
+            if isinstance(v, list):
+                f.write(f"{k}:\n")
+                for e in v:
+                    f.write(f"- {e}\n")
+            elif '_str' in k:
+                f.write(f"{k}: '{v}'\n")
+            else:
+                f.write(f"{k}: {v}\n")
     return config_file

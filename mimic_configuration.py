@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('--force', action='store_true', required=False, 
                         help='Overwrite previous output files')
     parser.add_argument('-y', '--yaml', metavar='', type=str, required=False, 
-                        help='input configuration file') ## for use in subsequent scripts
+                        help='input configuration file') 
 
     args = parser.parse_args()
     config_file = make_config_file(args)
