@@ -107,8 +107,8 @@ def make_config_file(args):
         config_dict['bit_min'] = int(args.min_bitscore) if args.min_bitscore else int(30)
         config_dict['bit_diff'] = int(args.bitscore_diff) if args.bitscore_diff else int(2)
         config_dict ['min_e'] = args.min_evalue if args.min_evalue else 0.01
-        config_dict['qsasa'] = args.min_qsasa if args.min_qsasa else 0.50
-        config_dict['lcr'] = args.max_lcr if args.max_lcr else 0.75
+        config_dict['qsasa'] = args.min_qsasa if args.min_qsasa else 0.75
+        config_dict['lcr'] = args.max_lcr if args.max_lcr else 0.50
         config_dict['control_species'] = args.control_species if args.control_species else [d.split('/')[-1].split('.')[0] for d in glob.glob(f"{config_dict['indir']}/controls/*.fa*")]
         config_dict['control_name'] = args.control_name if args.control_name else f"{len(args.control_species)}CtrlSpp" if len(args.control_species) > 1 else args.control_species[0]
         config_dict['patho_species'] = args.pathogen_species if args.pathogen_species else [d for d in filter(os.path.isdir, 
