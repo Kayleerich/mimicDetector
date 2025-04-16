@@ -13,16 +13,14 @@ The pipeline is contained in a Snakemake workflow, and requires a custom configu
 All of the parameters required to run the pipeline are found in the config.yaml file in the output directory, which needs to be created using the `mimic_configuration.py` script. The only parameters that are absolutely required are a single species for `--host_species` and at least one species for each of `--pathogen_species` and `--control_species`:  
 `python mimic_configuration.py -p PATHOGEN(S) -s HOST -c CONTROL(S)`  
 
-Example: specify multiple pathogen species 
+Example: specify multiple pathogen species. Each of these pathogen species will be run through the pipeline separately  
 `python mimic_configuration.py -p pathogen_speciesA pathogen_speciesB pathogen_speciesC -s host_species -c control_species`  
 
-Example: specify multiple control species with a specific control group name  
-`python mimic_configuration.py -p pathogen_species -s host_species -c control_speciesA control_speciesB control_speciesC --control_name controlGroup1`  
+Example: specify multiple control species with a specific control group name. This is the name that will be used in certain output files and the name of the concatenated FASTA controls file used for all pathogens  
+`python mimic_configuration.py -p pathogen_species -s host_species -c control_speciesA control_speciesB --control_name controlGroup1`  
 
-Example: specify input and output directories
+Example: specify input and output directories (see below for input directory organization)  
 `python mimic_configuration.py -p pathogen_species -s host_species -c control_species -i ../path/to/input/directory -o path/to/output/directory`
-
-
 
 All parameter arguments for mimic_configuration.py:
 ```
@@ -34,14 +32,14 @@ All parameter arguments for mimic_configuration.py:
   -i, --indir               Directory containing data (default is current directory)
   -o, --outdir              Directory to save output files (default is <cwd>/mimicDetector/<date>/)
   -f, --fileid              Name/identifier for output files
-  -k, --k_size              Length of k-mer, i.e. sequence fragment, to use (default is k=12)
-  -b, --bitscore_diff       Minimum difference in bitscore between pathogen-host and pathogen-control blastp hits (default is b=2)
-  --min_bitscore            Minimum bitscore allowed for pathogen-host blastp hits (default is 30)
-  -e, --min_evalue          Maximum E-value allowed for pathogen-host blastp hits(default is e=0.01)
-  -q, --min_qsasa           Minimum average solvent accessibility required for mimicry candidates (default is q=0.50)
-  -l, --max_lcr             Maximum low-complexity region overlap allowed for mimicry candidates (default is 75%, l=0.75)
+  -k, --k_size              Integer. Length of k-mer, i.e. sequence fragment, to use (default is k=12)
+  -b, --bitscore_diff       Numeric >=0. Minimum difference in bitscore between pathogen-host and pathogen-control blastp hits (default is b=2)
+  --min_bitscore            Numeric >=0. Minimum bitscore allowed for pathogen-host blastp hits (default is 30)
+  -e, --min_evalue          Float between 0 and 1. Maximum E-value allowed for pathogen-host blastp hits (default is e=0.01)
+  -q, --min_qsasa           Float between 0 and 1. Minimum average solvent accessibility required for mimicry candidates (default is q=0.75)
+  -l, --max_lcr             Float between 0 and 1. Maximum low-complexity region overlap allowed for mimicry candidates (default is 50%, l=0.50)
   --mask                    Single character string (i.e. X), default is lowercase
-  --min_unmasked            Minimum number of unmasked residues in k-mer (default: k_size/2)
+  --min_unmasked            Integer < k_size. Minimum number of unmasked residues in k-mer (default: k_size/2)
   -t, --max_threads         Maximum number of threads to use during workflow (default: 8)
   --force                   Overwrite previous configuration file
 ```
