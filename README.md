@@ -1,5 +1,5 @@
 # mimicDetector
-mimicDetector identifies small regions of pathogen proteins that share high sequence similarity to proteins of their host. Our goal is to narrow the search for mimicry from millions of potential regions to a quantity that is more manageable for manual curation. 
+mimicDetector is a Snakemake pipeline for identifying short regions of pathogen proteins that share high sequence similarity to proteins of their host.  
 
 ## Running the pipeline
 The pipeline requires >=Python3.6 as well as pre-installation of [POPScomp](https://github.com/Fraternalilab/POPScomp). The other programs/packages can be installed into a new conda environment using the [snake_mimics.yml](env/snake_mimics.yml) file: `conda env create -f snake_mimics.yml`
@@ -28,16 +28,22 @@ All parameter arguments for mimic_configuration.py:
   -c, --control_species     List of control species names (space delim)
   --control_name            Abbreviated name for controls set
   -i, --indir               Directory containing data (default is current directory)
-  -o, --outdir              Directory to save output files (default is <cwd>/mimicDetector/<date>/)
+  -o, --outdir              Output directory (default is <cwd>/mimicDetector_results/<date>/)
   -f, --fileid              Name/identifier for output files (default is host species name)
   -k, --k_size              INT, Length of k-mer, i.e. sequence fragment, to use (default is k=12)
-  -b, --bitscore_diff       NUM >=0, Minimum difference in bitscore between pathogen-host and pathogen-control blastp hits (default is b=2)
-  --min_bitscore            NUM >=0, Minimum bitscore allowed for pathogen-host blastp hits (default is 30)
-  -e, --min_evalue          FLOAT between 0 and 1, Maximum E-value allowed for pathogen-host blastp hits (default is e=0.01)
-  -q, --min_qsasa           FLOAT between 0 and 1, Minimum average solvent accessibility required for mimicry candidates (default is q=0.75)
-  -l, --max_lcr             FLOAT between 0 and 1, Maximum low-complexity region overlap allowed for mimicry candidates (default is 50%, l=0.50)
+  -b, --bitscore_diff       NUM >=0, Minimum difference in bitscore between pathogen-host and
+                             pathogen-control blastp hits (default is b=2)
+  --min_bitscore            NUM >=0, Minimum bitscore allowed for pathogen-host blastp hits 
+                             (default is 30)
+  -e, --min_evalue          FLOAT between 0 and 1, Maximum E-value allowed for pathogen-host blastp 
+                             hits (default is e=0.01)
+  -q, --min_qsasa           FLOAT between 0 and 1, Minimum average solvent accessibility required for 
+                             mimicry candidates (default is q=0.75)
+  -l, --max_lcr             FLOAT between 0 and 1, Maximum low-complexity region overlap allowed for 
+                             mimicry candidates (default is 50%, l=0.50)
   --mask                    Single character string (i.e. X), default is lowercase
-  --min_unmasked            INT < k_size. Minimum number of unmasked residues in k-mer (default: k_size/2)
+  --min_unmasked            INT < k_size. Minimum number of unmasked residues in k-mer 
+                             (default: k_size/2)
   -t, --max_threads         Maximum number of threads to use during workflow (default: 8)
   --force                   Overwrite previous configuration file
 ```
