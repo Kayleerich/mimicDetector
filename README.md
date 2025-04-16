@@ -2,7 +2,7 @@
 mimicDetector identifies small regions of pathogen proteins that share high sequence similarity to proteins of their host. Our goal is to narrow the search for mimicry from millions of potential regions to a quantity that is more manageable for manual curation. 
 
 ## Running the pipeline
-The pipeline requires >=Python3.6 as well as pre-installation of [POPScomp](https://github.com/Fraternalilab/POPScomp). The other programs/packages can be installed into a new conda environment using the [snake_mimics.yml]() file:  
+The pipeline requires >=Python3.6 as well as pre-installation of [POPScomp](https://github.com/Fraternalilab/POPScomp). The other programs/packages can be installed into a new conda environment using the [snake_mimics.yml](env/snake_mimics.yml) file:  
 `conda env create -f snake_mimics.yml`
 
 ### Basic usage
