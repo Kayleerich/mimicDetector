@@ -102,7 +102,9 @@ rule run_pathogen_popscomp:
         files=get_pstruct_files
     output:
         # flag file made only after popscomp has run on all pathogen structures
-        flag='{outdir}/{pathogen}/ppops_flag.out' 
+        flag='{outdir}/{pathogen}/ppops_flag.out',
+        tmp1=temp(popsb.out),
+        tmp2=temp(sigma.out)
     params: 
         indir=config["indir"]+'/{pathogen}/structures',
         outdir=config["outdir"]+'/{pathogen}/pops',
@@ -133,7 +135,9 @@ rule run_host_popscomp:
         files=get_hstruct_files
     output:
         # flag file made only after popscomp has run on all host structures
-        flag=f'{config["outdir"]}/{config["host_name"]}/hpops_flag.out' 
+        flag=f'{config["outdir"]}/{config["host_name"]}/hpops_flag.out',
+        tmp1=temp(popsb.out),
+        tmp2=temp(sigma.out)
     params: 
         indir=f'{config["indir"]}/host/structures',
         outdir=f'{config["outdir"]}/{config["host_name"]}/pops',
