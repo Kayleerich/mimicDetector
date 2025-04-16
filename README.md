@@ -31,15 +31,15 @@ All parameter arguments for mimic_configuration.py:
   --control_name            Abbreviated name for controls set
   -i, --indir               Directory containing data (default is current directory)
   -o, --outdir              Directory to save output files (default is <cwd>/mimicDetector/<date>/)
-  -f, --fileid              Name/identifier for output files
-  -k, --k_size              Integer. Length of k-mer, i.e. sequence fragment, to use (default is k=12)
-  -b, --bitscore_diff       Numeric >=0. Minimum difference in bitscore between pathogen-host and pathogen-control blastp hits (default is b=2)
-  --min_bitscore            Numeric >=0. Minimum bitscore allowed for pathogen-host blastp hits (default is 30)
-  -e, --min_evalue          Float between 0 and 1. Maximum E-value allowed for pathogen-host blastp hits (default is e=0.01)
-  -q, --min_qsasa           Float between 0 and 1. Minimum average solvent accessibility required for mimicry candidates (default is q=0.75)
-  -l, --max_lcr             Float between 0 and 1. Maximum low-complexity region overlap allowed for mimicry candidates (default is 50%, l=0.50)
+  -f, --fileid              Name/identifier for output files (default is host species name)
+  -k, --k_size              INT, Length of k-mer, i.e. sequence fragment, to use (default is k=12)
+  -b, --bitscore_diff       NUM >=0, Minimum difference in bitscore between pathogen-host and pathogen-control blastp hits (default is b=2)
+  --min_bitscore            NUM >=0, Minimum bitscore allowed for pathogen-host blastp hits (default is 30)
+  -e, --min_evalue          FLOAT between 0 and 1, Maximum E-value allowed for pathogen-host blastp hits (default is e=0.01)
+  -q, --min_qsasa           FLOAT between 0 and 1, Minimum average solvent accessibility required for mimicry candidates (default is q=0.75)
+  -l, --max_lcr             FLOAT between 0 and 1, Maximum low-complexity region overlap allowed for mimicry candidates (default is 50%, l=0.50)
   --mask                    Single character string (i.e. X), default is lowercase
-  --min_unmasked            Integer < k_size. Minimum number of unmasked residues in k-mer (default: k_size/2)
+  --min_unmasked            INT < k_size. Minimum number of unmasked residues in k-mer (default: k_size/2)
   -t, --max_threads         Maximum number of threads to use during workflow (default: 8)
   --force                   Overwrite previous configuration file
 ```
@@ -80,6 +80,8 @@ The "controls" directory should contain a FASTA file for each of the control spe
 |   │   ├── ...
 ```
 After the pipeline has finished, there will be a directory for each of the pathogen species as well as for the host species. 
+Files are named according to the parameters specified in the config.yaml file.  
+The final output (`*_paired_mimics.tsv`) contains 10 columns: `pathogen_prot, pathogen_start, pathogen_end, pathogen_sequence, pathogen_qsasa, host_prot, host_start, host_end, host_sequence, host_qsasa` where pathogen_start/pathogen_end and host_start/host_end are the start and end protein coordinates for each mimicry candidate, and pathogen_qsasa/host_qsasa are the average QSASA for those sequence ranges
 ```
 ├── outdir
 │   ├── config.yaml
@@ -91,20 +93,20 @@ After the pipeline has finished, there will be a directory for each of the patho
 |   │   │   ├── ...
 │   ├── pathogenA_name
 |   │   ├── ppops_flag.out
-|   │   ├── pathogenA_name-kmers.fasta
-|   │   ├── structures
+|   │   ├── pathogenA_name-12mers.fasta
+|   │   ├── pathogenA_name.control_name.12mers_blastp.out 
+|   │   ├── pathogenA_name.fileID.12mers_blastp.out
+|   │   ├── pathogenA_name.fileID.12mers_b2_e01_hcfiltered_blastp.out
+|   │   ├── pathogenA_name.fileID.12mers_b2_e01_qsasa_averages.tsv
+|   │   ├── pathogenA_name.fileID.12mers_b2_e01_q75_filtered.tsv
+|   │   ├── pathogenA_name.fileID.12mers_b2_e01_q75_l50_paired_mimics.tsv
+|   │   ├── pops
 |   │   │   ├── pops_protA1.out
 |   │   │   ├── pops_protA2.out
 |   │   │   ├── ...
 │   ├── pathogenB_name
-|   │   ├── ppops_flag.out
-|   │   ├── pathogenB_name-kmers.fasta
-|   │   ├── structures
-|   │   │   ├── pops_protB1.out
-|   │   │   ├── pops_protB2.out
-|   │   │   ├── ...
+|   │   ├── ...
 ```
-
 
 ## Data selection recommendations and ramblings
 First, data selection is important. As the adage goes, “garbage in, garbage out.” Appropriate controls include species that are more closely related to the pathogen than to the host, since if the control set includes species that are more closely related to the host than to the pathogen, it is likely that this will remove host taxon-specific homologous sequences. 
