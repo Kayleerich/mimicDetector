@@ -1,0 +1,15 @@
+name: snake_mimics
+channels:
+  - conda-forge
+  - anaconda
+  - defaults
+  - bioconda
+  - r
+dependencies:
+  - bedtools=2.31.1=h13024bc_3
+  - biopython=1.85=py311h9ecbd09_1
+  - blast=2.16.0=h66d330f_5
+  - pandas=2.2.3=py311h7db5c69_3
+  - pybedtools=0.12.0=py311h2de2dd3_0
+  - python=3.11.12=h9e4cc4f_0_cpython
+  - snakemake=7.32.4=hdfd78af_1
