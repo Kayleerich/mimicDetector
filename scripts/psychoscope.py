@@ -13,21 +13,8 @@ class Chipset():
                       'n', 'mask', 'bit_min', 'bit_diff', 'b_str', 'min_e', 
                       'e_str', 'qsasa', 'q_str', 'lcr', 'l_str', 'runid')
     """
-    mimicDetector basic functions
-    patho_name = Pathogen
-    host_name = Host
-    control_name = Control
-    k = 12
-    n = 6
-    mask = lowercase
-    bit_min = 30
-    bit_diff = 2
-    min_e = 0.01
-    e_str = 01
-    qsasa = 0.50
-    q_str = 50
-    lcr = 0.75
-    l_str = 75
+    mimicDetector basic functions to prepare data for filtering steps
+    
     fragment_fasta:     creates k-mer FASTA file or returns k-mer dictionary, input: FASTA file
     make_bed:           creates BED file from BLAST tabular output, SEGmasker interval output or Phobius short output
                             options are: 'blast-query', 'blast-subject', 'phobius', 'segmasker'
@@ -129,7 +116,7 @@ class MimicDetectionI():
                   'k', 'bit_min', 'bit_diff', 'b_str', 'min_e', 'e_str', 'qsasa', 
                   'q_str', 'lcr', 'l_str', 'runidI', 'outdir', 'indir') 
     """
-    mimicDetector k-mer comparison and filtering functions
+    mimicDetector k-mer comparison functions: bitscore and e-value filtering 
     filter_blast_bitscore(): returns filtered host blastp results from input pathogen-host and pathogen-control BLASTP tabular files
                              if control BLASTP file is too large: chunk=True
                              to write max control bitscores to file: write_max=True
@@ -164,8 +151,8 @@ class MimicDetectionI():
                 max_blast = _max(blastdf)
             if write:
                 max_blast.to_csv(max_bits_file, sep='\t', header=None, index=False)
-                log_msg = f'Top BLASTP results saved to {max_bits_file}\n'
-                write_log(self.log_file, log_msg)
+                log_msg = f'Top control BLASTP results saved to {max_bits_file}\n'
+                # write_log(self.log_file, log_msg)
             return max_blast
         
         cont_df = _max_bitscore(Path(control_blast), chunk=chunk, write=False)
@@ -192,6 +179,8 @@ class MimicDetectionI():
         if outdf:
             return filtered_df, self.bit_diff
         else:
+            log_msg = f'Filtered BLASTP results saved to {bfilt_file}\n'
+            # write_log(self.log_file, log_msg)
             return bfilt_file
         
     def merge_ranges(self, tsv_file):
@@ -272,7 +261,7 @@ class MimicDetectionI():
                             i += 1
                         break
                     else:
-                        ## current range is not equal to previous, check range_lists for overlaps
+                        ## if current range is not equal to previous, check range_lists for overlaps
                         any_overlap = []
                         for prev in range(len(query_range_list)):
                             tf = _is_overlaping(q_range, query_range_list[prev]) and _is_overlaping(h_range, host_range_list[prev])
@@ -335,7 +324,7 @@ class MimicDetectionII():
                   'bit_diff', 'b_str', 'min_e', 'e_str', 'qsasa', 'q_str', 'lcr', 'l_str', 
                   'runidI', 'runidII', 'outdir', 'indir')
     """
-    mimicDetector QSASA filtering functions
+    mimicDetector amino acid solvent accessibility assesment functions: QSASA filtering
     kmer_coords_dict is a nested dictionary made with merge_ranges(filt_blast) from MimicDetectionI()
     region_avg_qsasa:   returns list of lists with merged region coordinates and mean qsasa
                             [prot_name, q_region_avg, q_region_len, q_range[0], (q_range[1] - 1),
@@ -354,12 +343,12 @@ class MimicDetectionII():
         ppops_files = glob.glob(f"{ppops_path}/pops_*.out")
         if not ppops_files:
             err_msg = f"No pops files found for pathogen in {ppops_path}"
-            write_log(self.log_file, f'{err_msg}\n')
+            # write_log(self.log_file, f'{err_msg}\n')
             raise FileNotFoundError(err_msg)
         hpops_files = glob.glob(f"{hpops_path}/pops_*.out")
         if not hpops_files:
             err_msg = f"No pops files found for host in {hpops_path}"
-            write_log(self.log_file, f'{err_msg}\n')
+            # write_log(self.log_file, f'{err_msg}\n')
             raise FileNotFoundError(err_msg)
         return ppops_files, hpops_files
     
@@ -457,14 +446,26 @@ class MimicDetectionII():
             filt_qsasa_file=Path(self.outdir, self.patho_name, f"{self.patho_name}.{self.runidII}_filtered.tsv")
             qsasa_df_filtered.to_csv(filt_qsasa_file, sep="\t", header=False, index=False) 
 
-            log_msg = ''.join([f"\n{all_qsasa_df.shape[0]} paired regions saved to {str(all_qsasa_file)}\n",
-                               f"{qsasa_df_filtered.shape[0]} paired regions with minimum QSASA of {self.q_str} saved to {str(filt_qsasa_file)}\n"])
-            write_log(self.log_file, log_msg)
+            log_msg = ''.join([all_qsasa_df.shape[0], 
+                               " paired regions before QSASA filtering",
+                               " saved to: \n\t", 
+                               str(all_qsasa_file),  
+                               qsasa_df_filtered.shape[0],
+                               " paired regions with minimum mean QSASA of 0.", 
+                               self.q_str, 
+                               " saved to: \n\t", 
+                               str(filt_qsasa_file), 
+                               "\n"])
+            # write_log(self.log_file, log_msg)
             return all_qsasa_file, filt_qsasa_file
         else:
-            log_msg = ''.join([f"\n{all_qsasa_df.shape[0]} paired regions before QSASA filtering\n",
-                               f"{qsasa_df_filtered.shape[0]} paired regions with minimum QSASA of {self.q_str}\n"])
-            write_log(self.log_file, log_msg)
+            log_msg = ''.join([all_qsasa_df.shape[0], 
+                               " paired regions before QSASA filtering\n", 
+                               qsasa_df_filtered.shape[0],
+                               " paired regions with minimum mean QSASA of 0.", 
+                               self.q_str, 
+                               "\n"])
+            # write_log(self.log_file, log_msg)
             return qsasa_df_filtered
         
     
@@ -473,7 +474,7 @@ class GreaterMimicDetection():
                   'bit_diff', 'b_str', 'min_e', 'e_str', 'qsasa', 'q_str', 'lcr', 'l_str', 
                   'runidI', 'runidII', 'runidIII', 'outdir', 'indir')
     """
-    mimicDetector final mimicry candidate filtering
+    mimicDetector final mimicry candidate filtering: LCR filtering 
 
     """
     def __init__(self, **kwargs):
@@ -501,7 +502,7 @@ class GreaterMimicDetection():
         hostlcr_df = hostlcr_bed.to_dataframe()
         hostlcr_df.columns = ['host_prot', 'host_start', 'host_end']
 
-        paired_df = hostlcr_df.merge(qfilt_df, on=['host_prot', 'host_start', 'host_end'], how='right') # or? how='left'
+        paired_df = hostlcr_df.merge(qfilt_df, on=['host_prot', 'host_start', 'host_end'], how='right') 
 
         pbed = BedTool.from_dataframe(paired_df[['pathogen_prot', 'pathogen_start', 'pathogen_end']])
         hbed = BedTool.from_dataframe(paired_df[['host_prot', 'host_start', 'host_end']])
@@ -531,7 +532,12 @@ class GreaterMimicDetection():
                                          'host_prot', 'host_start', 'host_end', 
                                          'host_sequence', 'host_qsasa']]
 
-        # filt_lcr_file=Path(self.outdir, self.patho_name, f"{self.patho_name}.{self.runidIII}_paired_mimics.tsv")
+        log_msg = ''.join([filt_paired_df.shape[0], 
+                           " paired regions with maximum LCR overlap of 0.", 
+                           self.l_str, 
+                           " saved to: \n\t", str(outfile), 
+                           "\n"])
+        # write_log(self.log_file, log_msg)
         filt_paired_df.to_csv(Path(outfile), sep='\t', header=True, index=False)
         return 
 
@@ -539,12 +545,12 @@ class GreaterMimicDetection():
 class Mimesis():
     __mim_vars = ()
     """
-    mimicDetector metagenomic commensal mimicry detection functions
+    mimicDetector functions for metagenomic commensal analysis 
     Takes dictionary containing all species to be compared: symb_dict['symbiotic_species_name'] = 'control_name'
     Host is assumed to be the same for all 
     """
     def __init__(self, symb_dict={}, **kwargs):
-        err_str = "Mimesis: metagenomic commensal mimicry detection has not been implemented yet, sorry!"
+        err_str = "Mimesis: mimicry analysis in metagenomic commensal data has not been implemented yet, sorry!"
         raise NotImplementedError(err_str)
         for k, v in kwargs.items():
             try:
