@@ -1,8 +1,10 @@
+import numpy as np
 from utils import write_log
 import re
 import pandas as pd
 from pathlib import Path
-from Bio import SeqIO
+from Bio import SeqIO, Align
+from Bio.Align import substitution_matrices
 import glob
 from pybedtools import BedTool
 import sys
@@ -168,7 +170,7 @@ class MimicDetectionI():
         if self.bit_diff == 'stdev':
             self.bit_diff = round(topbits_df[(topbits_df['bitscore_control'] > 0) & (topbits_df['bitscore_host'] > 0)]['bits_diff'].std())
             self.b_str = str(self.bit_diff).split('.')[0]
-            self.runidI = f'{self.fileid}b{self.b_str}_e{self.e_str}' # default: {host}.{k}mers_b{b}_e{e}
+            self.runidI = f'{self.fileid}b{self.b_str}_e{self.e_str}'
         filtered_df = topbits_df[(topbits_df['bits_diff'] >= float(self.bit_diff)) & (topbits_df['evalue_host'] <= float(self.min_e))]
         if write_all:
             unfilt_bits_file=Path(self.outdir, self.patho_name, f'{self.patho_name}.{self.fileid}_top_hits_unfiltered.tsv')
@@ -207,7 +209,7 @@ class MimicDetectionI():
             return new_range
         
         coords_dict = {}
-        with open(tsv_file, 'r') as file: ###need to change to take filtered_df?
+        with open(tsv_file, 'r') as file:
             for ln in file:
                 ln = ln.split()
                 pair = ln[0].split('/')[0] + "." + ln[1] 
@@ -231,14 +233,14 @@ class MimicDetectionI():
                 except KeyError:
                     coords_dict[pair]['host'] = [host_range]
         for pair in coords_dict.keys():
-            coords_dict[pair]['length'] = len(coords_dict[pair]['query'])
+            coords_dict[pair]['num_aln'] = len(coords_dict[pair]['query'])
         
         merged_coords_dict = {}
         for pair in coords_dict.keys():
 
             query_lists = coords_dict[pair]['query']
             host_lists = coords_dict[pair]['host']
-            range_num = coords_dict[pair]['length']
+            range_num = coords_dict[pair]['num_aln']
 
             ## assign variables and add first range to range_lists
             q_range = tuple(query_lists[0])
@@ -315,7 +317,7 @@ class MimicDetectionI():
                     merged_coords_dict[pair]['query'] = [query_range]
                     merged_coords_dict[pair]['host'] = [host_range]
         for pair in merged_coords_dict.keys():
-            merged_coords_dict[pair]['length'] = len(merged_coords_dict[pair]['query'])
+            merged_coords_dict[pair]['num_aln'] = len(merged_coords_dict[pair]['query'])
         return merged_coords_dict
 
 
@@ -402,12 +404,11 @@ class MimicDetectionII():
                             q_region_vals = 0
                             q_region_avg = "NaN"
                         else:
-                            q_region_len = len(q_region_vals) #(q_range[1] - q_range[0])
+                            q_region_len = len(q_region_vals) 
                             q_region_avg = (sum(q_region_vals) / q_region_len)
                         q_region_vals_lists.append(q_region_vals)
                         h_region_len = (h_range[1] - h_range[0])
                         if hfiles:
-                            # hfile = f"{self.outdir}/{self.host_name}/pops/pops_{h_prot_name}_cat.out"
                             hfile = f"{self.outdir}/{self.host_name}/pops/pops_{h_prot_name}.out"
                             try: 
                                 h_prot_sasa = pd.read_csv(f'{hfile}', sep="\s+", header=None, engine='python', skiprows=3, skipfooter=3)
@@ -434,7 +435,10 @@ class MimicDetectionII():
                             h_region_avg = "NaN"
                         region_vals_lists.append([prot_name, q_range[0], (q_range[1] - 1), q_region_avg, q_region_len, 
                             h_prot_name, h_range[0], (h_range[1] - 1), h_region_avg, h_region_len])
-        all_qsasa_df = pd.DataFrame(region_vals_lists, columns = ['q_prot', 'q_start', 'q_end', 'q_avg', 'q_length', 'h_prot', 'h_start', 'h_end', 'h_avg', 'h_length'])
+        all_qsasa_df = pd.DataFrame(region_vals_lists, columns = ['q_prot', 'q_start', 'q_end', 
+                                                                  'q_avg', 'q_length', 'h_prot', 
+                                                                  'h_start', 'h_end', 'h_avg', 
+                                                                  'h_length'])
         return all_qsasa_df 
     
     def qsasa_filt(self, all_qsasa_df, write=True):
@@ -471,7 +475,7 @@ class MimicDetectionII():
     
 class GreaterMimicDetection():
     __gmd_vars = ('fileid', 'log_file', 'patho_name', 'host_name', 'control_name', 'k', 'bit_min', 
-                  'bit_diff', 'b_str', 'min_e', 'e_str', 'qsasa', 'q_str', 'lcr', 'l_str', 
+                  'bit_diff', 'b_str', 'min_e', 'e_str', 'qsasa', 'q_str', 'lcr', 'l_str', 'dbsize',
                   'runidI', 'runidII', 'runidIII', 'outdir', 'indir')
     """
     mimicDetector final mimicry candidate filtering: LCR filtering 
@@ -512,31 +516,50 @@ class GreaterMimicDetection():
 
         pseq_bed = pbed.sequence(fi=BedTool(pathogen_fasta), tab=True, fo=pseqbed) 
         pseq_df= pd.read_csv(pseqbed, sep='\t', header=None, names=['chr', 'pathogen_sequence'])
-        pseq_df[['pathogen_prot','coords']] = pseq_df['chr'].str.split(':',expand=True)
-        pseq_df[['pathogen_start', 'pathogen_end']] = pseq_df['coords'].str.split('-',expand=True)
+        pseq_df[['pathogen_prot','coords']] = pseq_df['chr'].str.split(':', expand=True)
+        pseq_df[['pathogen_start', 'pathogen_end']] = pseq_df['coords'].str.split('-', expand=True)
         pseq_df = pseq_df[['pathogen_prot', 'pathogen_start', 'pathogen_end', 'pathogen_sequence']]
         pseq_df[['pathogen_start', 'pathogen_end']] = pseq_df[['pathogen_start', 'pathogen_end']].astype(int)
 
         hseq_bed = hbed.sequence(fi=BedTool(host_fasta), tab=True, fo=hseqbed)
         hseq_df= pd.read_csv(hseqbed, sep='\t', header=None, names=['chr', 'host_sequence'])
-        hseq_df[['host_prot','coords']] = hseq_df['chr'].str.split(':',expand=True)
-        hseq_df[['host_start', 'host_end']] = hseq_df['coords'].str.split('-',expand=True)
+        hseq_df[['host_prot','coords']] = hseq_df['chr'].str.split(':', expand=True)
+        hseq_df[['host_start', 'host_end']] = hseq_df['coords'].str.split('-', expand=True)
         hseq_df = hseq_df[['host_prot', 'host_start', 'host_end', 'host_sequence']]
         hseq_df[['host_start', 'host_end']] = hseq_df[['host_start', 'host_end']].astype(int)
         paired_df = paired_df.infer_objects()
 
         hpaired_df = hseq_df.merge(paired_df, how='outer', on=['host_prot', 'host_start', 'host_end'])
-        filt_paired_df = pseq_df.merge(hpaired_df, how='inner', on=['pathogen_prot', 'pathogen_start', 'pathogen_end']).round({'pathogen_qsasa': 3, 'host_qsasa': 3})
+        filt_paired_df = pseq_df.merge(hpaired_df, how='inner', on=['pathogen_prot', 'pathogen_start', 
+                                                                    'pathogen_end']).round({'pathogen_qsasa': 3, 
+                                                                                            'host_qsasa': 3})
         filt_paired_df = filt_paired_df[['pathogen_prot', 'pathogen_start', 'pathogen_end', 
                                          'pathogen_sequence', 'pathogen_qsasa', 
                                          'host_prot', 'host_start', 'host_end', 
                                          'host_sequence', 'host_qsasa']]
+        
+        def _aln(seq1, seq2, matrix="PAM30", lamb=0.339, kconst=0.28, gopen=-15, gext=-3):  
+            """LAMBDA and K values retrieved from BLASTP v2.16.0 stats table for PAM30"""
+            aligner = Align.PairwiseAligner()
+            aligner.substitution_matrix = substitution_matrices.load(matrix)
+            aligner.open_gap_score = gopen
+            aligner.extend_gap_score = gext
+            bits = aligner.score(seq1, seq2)
+            bitsc =  ((lamb*bits) - np.log(kconst))/ np.log(2)
+            evalue = kconst*len(seq1)*self.dbsize*(2.71828**(-lamb*bits))
+            return bitsc, evalue
+        
+        filt_paired_df[['bitscore', 'e_value']] = filt_paired_df.apply(lambda x: _aln(x.pathogen_sequence, 
+                                                                                      x.host_sequence), 
+                                                                                      axis = 1, 
+                                                                                      result_type='expand'
+                                                                                      ).round({'bitscore':1, 'e_value':5})
 
-        log_msg = ''.join([filt_paired_df.shape[0], 
-                           " paired regions with maximum LCR overlap of 0.", 
-                           self.l_str, 
-                           " saved to: \n\t", str(outfile), 
-                           "\n"])
+        # log_msg = ''.join([filt_paired_df.shape[0], 
+        #                    " paired regions with maximum LCR overlap of 0.", 
+        #                    self.l_str, 
+        #                    " saved to: \n\t", str(outfile), 
+        #                    "\n"])
         # write_log(self.log_file, log_msg)
         filt_paired_df.to_csv(Path(outfile), sep='\t', header=True, index=False)
         return 
