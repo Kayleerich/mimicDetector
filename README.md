@@ -1,5 +1,6 @@
 # mimicDetector
 mimicDetector is a Snakemake pipeline for identifying short regions of pathogen proteins that share high sequence similarity to proteins of their host.  
+This is the companion code for the preprint available on bioRxiv: [mimicDetector: a pipeline for protein motif mimicry detection in host-pathogen systems](https://doi.org/10.1101/2025.05.02.651971)
 
 ## Running the pipeline
 The pipeline requires >=Python3.6 as well as pre-installation of [POPScomp](https://github.com/Fraternalilab/POPScomp). The other programs/packages can be installed into a new conda environment using the [snake_mimics.yml](env/snake_mimics.yml) file: `conda env create -f snake_mimics.yml`
@@ -38,9 +39,9 @@ All parameter arguments for mimic_configuration.py:
   -e, --min_evalue          FLOAT between 0 and 1, Maximum E-value allowed for pathogen-host blastp 
                              hits (default is e=0.01)
   -q, --min_qsasa           FLOAT between 0 and 1, Minimum average solvent accessibility required for 
-                             mimicry candidates (default is q=0.75)
+                             mimicry candidates (default is q=0.50)
   -l, --max_lcr             FLOAT between 0 and 1, Maximum low-complexity region overlap allowed for 
-                             mimicry candidates (default is 50%, l=0.50)
+                             mimicry candidates (default is 75%, l=0.75)
   --mask                    Single character string (i.e. X), default is lowercase
   --min_unmasked            INT < k_size. Minimum number of unmasked residues in k-mer 
                              (default: k_size/2)
@@ -77,7 +78,7 @@ The "controls" directory should contain a FASTA file for each of the control spe
 |   │   │   ├── protB1.pdb
 |   │   │   ├── protB2.pdb
 |   │   │   ├── ...
-:
+:   :   
 │   ├── controls
 |   │   ├── control1_name.fasta
 |   │   ├── control2_name.fasta
@@ -86,7 +87,7 @@ The "controls" directory should contain a FASTA file for each of the control spe
   
 After the pipeline has finished, there will be a directory for each of the pathogen species as well as for the host species. 
 Files are named according to the parameters specified in the config.yaml file.  
-The final output (`*_paired_mimics.tsv`) contains 12 columns: `pathogen_prot, pathogen_start, pathogen_end, pathogen_sequence, pathogen_qsasa, host_prot, host_start, host_end, host_sequence, host_qsasa, bitscore, e_value` where pathogen_start/pathogen_end and host_start/host_end are the start and end protein coordinates (inclusive) for each mimicry candidate, and pathogen_qsasa/host_qsasa are the average QSASA for all residues in those sequence ranges. Bitscore and E-value calculations are based on LAMBDA and K values retrieved from the BLASTP v2.16.0 stats table for the PAM30 substitution matrix.
+The final output (`*_paired_mimics.tsv`) contains 12 columns: `pathogen_prot, pathogen_start, pathogen_end, pathogen_sequence, pathogen_qsasa, host_prot, host_start, host_end, host_sequence, host_qsasa, bitscore, e_value` where pathogen_start/pathogen_end and host_start/host_end are the start and end protein coordinates (inclusive) for each mimicry candidate, and pathogen_qsasa/host_qsasa are the average QSASA for all residues in those sequence ranges. Bitscore and E-value calculations are based on LAMBDA and K values retrieved from the [BLASTP v2.16.0](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.16.0+-src.tar.gz) stats table for the PAM30 substitution matrix.
 ```
 ├── outdir
 │   ├── config.yaml
@@ -96,6 +97,7 @@ The final output (`*_paired_mimics.tsv`) contains 12 columns: `pathogen_prot, pa
 |   │   │   ├── pops_prot1.out
 |   │   │   ├── pops_prot2.out
 |   │   │   ├── ...
+|   |   :   :
 │   ├── pathogenA_name
 |   │   ├── ppops_flag.out
 |   │   ├── pathogenA_name-12mers.fasta
@@ -109,6 +111,7 @@ The final output (`*_paired_mimics.tsv`) contains 12 columns: `pathogen_prot, pa
 |   │   │   ├── pops_protA1.out
 |   │   │   ├── pops_protA2.out
 |   │   │   ├── ...
+|   |   :   :
 │   ├── pathogenB_name
 |   │   ├── ...
 ```
