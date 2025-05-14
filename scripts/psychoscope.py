@@ -539,7 +539,9 @@ class GreaterMimicDetection():
                                          'host_sequence', 'host_qsasa']]
         
         def _aln(seq1, seq2, matrix="PAM30", lamb=0.339, kconst=0.28, gopen=-15, gext=-3):  
-            """LAMBDA and K values retrieved from BLASTP v2.16.0 stats table for PAM30"""
+            """
+            LAMBDA and K values retrieved from the BLASTP v2.16.0 stats table for PAM30
+            """
             aligner = Align.PairwiseAligner()
             aligner.substitution_matrix = substitution_matrices.load(matrix)
             aligner.open_gap_score = gopen

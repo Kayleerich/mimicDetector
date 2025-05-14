@@ -86,7 +86,7 @@ The "controls" directory should contain a FASTA file for each of the control spe
   
 After the pipeline has finished, there will be a directory for each of the pathogen species as well as for the host species. 
 Files are named according to the parameters specified in the config.yaml file.  
-The final output (`*_paired_mimics.tsv`) contains 10 columns: `pathogen_prot, pathogen_start, pathogen_end, pathogen_sequence, pathogen_qsasa, host_prot, host_start, host_end, host_sequence, host_qsasa` where pathogen_start/pathogen_end and host_start/host_end are the start and end protein coordinates (inclusive) for each mimicry candidate, and pathogen_qsasa/host_qsasa are the average QSASA for all residues in those sequence ranges.
+The final output (`*_paired_mimics.tsv`) contains 12 columns: `pathogen_prot, pathogen_start, pathogen_end, pathogen_sequence, pathogen_qsasa, host_prot, host_start, host_end, host_sequence, host_qsasa, bitscore, e_value` where pathogen_start/pathogen_end and host_start/host_end are the start and end protein coordinates (inclusive) for each mimicry candidate, and pathogen_qsasa/host_qsasa are the average QSASA for all residues in those sequence ranges. Bitscore and E-value calculations are based on LAMBDA and K values retrieved from the BLASTP v2.16.0 stats table for the PAM30 substitution matrix.
 ```
 ├── outdir
 │   ├── config.yaml
