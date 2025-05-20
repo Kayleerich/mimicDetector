@@ -6,7 +6,6 @@ from pathlib import Path
 from Bio import SeqIO, Align
 from Bio.Align import substitution_matrices
 import glob
-# from pybedtools import BedTool
 import sys
 import os
 
@@ -31,7 +30,6 @@ class Chipset():
             except AssertionError:
                 pass
 
-    ### make sure these fns are the most recent/up to date 
     def fragment_fasta(self, fastafile, k_file):
         """
         Read fasta file and create k-mers for each sequence.
@@ -52,13 +50,13 @@ class Chipset():
                     seq_fragment = sequence[i:i+self.k]
                     header = f"{record.description}/{i}:{i+self.k}"
                     record.id = header
-                    #remove fragments that have too many masked characters
+                    # remove fragments that have too many masked characters
                     if self.mask != 'lowercase':
                         if seq_fragment.count(self.mask) > self.n:
                             continue
                     elif _count_lower(str(seq_fragment)) > self.n:
                         continue
-                    #remove fragments that are less than k amino acids in length
+                    # remove fragments that are less than k amino acids in length
                     if len(seq_fragment) != self.k:
                         continue
                     else:
@@ -154,7 +152,7 @@ class MimicDetectionI():
             if write:
                 max_blast.to_csv(max_bits_file, sep='\t', header=None, index=False)
                 log_msg = f'Top control BLASTP results saved to {max_bits_file}\n'
-                # write_log(self.log_file, log_msg)
+                write_log(self.log_file, log_msg)
             return max_blast
         
         cont_df = _max_bitscore(Path(control_blast), chunk=chunk, write=False)
@@ -182,7 +180,7 @@ class MimicDetectionI():
             return filtered_df, self.bit_diff
         else:
             log_msg = f'Filtered BLASTP results saved to {bfilt_file}\n'
-            # write_log(self.log_file, log_msg)
+            write_log(self.log_file, log_msg)
             return bfilt_file
         
     def merge_ranges(self, tsv_file):
@@ -254,29 +252,29 @@ class MimicDetectionI():
             while i < range_num:
                 j = 0 ## position of range to compare from range_lists
 
-                while j < len_query_range_list: ## check ranges added to range_lists
+                while j < len_query_range_list: # check ranges added to range_lists
                     if (q_range == query_range_list[j]) and (h_range == host_range_list[j]):
-                        ## exact same range, already in range_lists -- go to next in query_lists
+                        # exact same range, already in range_lists -- go to next in query_lists
                         if i < range_num:
                             q_range = tuple(query_lists[i])
                             h_range = tuple(host_lists[i])
                             i += 1
                         break
                     else:
-                        ## if current range is not equal to previous, check range_lists for overlaps
+                        # if current range is not equal to previous, check range_lists for overlaps
                         any_overlap = []
                         for prev in range(len(query_range_list)):
                             tf = _is_overlaping(q_range, query_range_list[prev]) and _is_overlaping(h_range, host_range_list[prev])
                             any_overlap.append(tf)
                         if any(any_overlap):
-                            ## if any overlapping ranges are found, find index from query_range_list for overlaps
+                            # if any overlapping ranges are found, find index from query_range_list for overlaps
                             idx = sorted([n for n, o in enumerate(any_overlap) if o == True], reverse=True)
 
-                            ## get overlapping ranges and remove them from range_lists
+                            # get overlapping ranges and remove them from range_lists
                             q_ovrlp = [query_range_list.pop(n) for n in idx]
                             h_ovrlp = [host_range_list.pop(n) for n in idx]
 
-                            ## get start and stop values from overlapping ranges
+                            # get start and stop values from overlapping ranges
                             qmin = min(q_ovrlp)[0]
                             qmax = max(q_ovrlp, key = lambda t: t[1])[1]
                             q_ovrlp = (qmin, qmax)
@@ -285,15 +283,15 @@ class MimicDetectionI():
                             hmax = max(h_ovrlp, key = lambda t: t[1])[1]
                             h_ovrlp = (hmin, hmax)
 
-                            ## overwrite range variables with new start/stop coordinates and add to range_lists
+                            # overwrite range variables with new start/stop coordinates and add to range_lists
                             q_range = _merge_range(q_range, q_ovrlp)
                             h_range = _merge_range(h_range, h_ovrlp)
                             query_range_list.append(q_range)
                             host_range_list.append(h_range)
-                            ## update length variable of range_lists (j)
+                            # update length variable of range_lists (j)
                             len_query_range_list = len(query_range_list)
                         else:
-                            ## no overlaps in current range_lists, append current ranges
+                            # no overlaps in current range_lists, append current ranges
                             query_range_list.append(q_range)
                             host_range_list.append(h_range)
                         if i < range_num:
@@ -329,8 +327,6 @@ class MimicDetectionII():
     mimicDetector amino acid solvent accessibility assesment functions: QSASA filtering
     kmer_coords_dict is a nested dictionary made with merge_ranges(filt_blast) from MimicDetectionI()
     region_avg_qsasa:   returns list of lists with merged region coordinates and mean qsasa
-                            [prot_name, q_region_avg, q_region_len, q_range[0], (q_range[1] - 1),
-                             h_prot_name, h_region_avg, h_region_len, h_range[0], (h_range[1] - 1)]
     """
     def __init__(self, **kwargs): 
         for k, v in kwargs.items():
@@ -345,12 +341,10 @@ class MimicDetectionII():
         ppops_files = glob.glob(f"{ppops_path}/pops_*.out")
         if not ppops_files:
             err_msg = f"No pops files found for pathogen in {ppops_path}"
-            # write_log(self.log_file, f'{err_msg}\n')
             raise FileNotFoundError(err_msg)
         hpops_files = glob.glob(f"{hpops_path}/pops_*.out")
         if not hpops_files:
             err_msg = f"No pops files found for host in {hpops_path}"
-            # write_log(self.log_file, f'{err_msg}\n')
             raise FileNotFoundError(err_msg)
         return ppops_files, hpops_files
     
@@ -358,21 +352,21 @@ class MimicDetectionII():
         colnames = ['ResidNe', 'Chain', 'ResidNr', 'iCode', 'Phob/A^2', 'Phil/A^2', 'SASA/A^2', 'Q(SASA)', 'N(overl)', 'Surf/A^2']
         region_vals_lists = []
         for pfile in ppops_files:
-            ## check each pathogen pops file, get protein name
+            # check each pathogen pops file, get protein name
             prot_name = pfile.split('pops_')[1]
             prot_name = prot_name.split('.')[0]
             prot_name = prot_name.split('-')[0]
-            ## get all pairs that include pathogen protein name
+            # get all pairs that include pathogen protein name
             all_pair_keys = [pair_key for pair_key in kmer_coords_dict.keys() if prot_name in pair_key] 
 
             if len(all_pair_keys) > 0:
-                ## if there is at least one pathogen-host pair for that protein, check number of pops files
+                # if there is at least one pathogen-host pair for that protein, check number of pops files
                 pfiles = [file for file in ppops_files if prot_name in file]
                 if len(pfiles) > 1:
                     log_msg = f"Multiple pops files for pathogen protein {prot_name}\n"
                     write_log(self.log_file, log_msg)
 
-                ## open pops file, make dataframe
+                # open pops file, make dataframe
                 try: 
                     prot_sasa = pd.read_csv(pfile, sep="\s+", header=None, engine='python', skiprows=3, skipfooter=3)
                 except pd.errors.EmptyDataError:
@@ -381,15 +375,15 @@ class MimicDetectionII():
                 for pair in all_pair_keys:
                     q_region_vals_lists = []
                     h_region_vals_lists = []
-                    ## get host protein file, need to add check if exists
+                    # get host protein file, need to add check if exists
                     h_prot_name = pair.split('.')[1]
-                    ## find all pops files
+                    # find all pops files
                     hfiles = [file for file in hpops_files if h_prot_name in file]
                     if len(hfiles) > 1:
                         log_msg = f"Multiple pops files for host protein {h_prot_name}\n"
                         write_log(self.log_file, log_msg)
 
-                    ## assign variables
+                    # assign variables
                     query_ranges = kmer_coords_dict[pair]['query'] 
                     host_ranges = kmer_coords_dict[pair]['host']
                     for i in range(len(query_ranges)):
@@ -433,8 +427,8 @@ class MimicDetectionII():
                             h_region_vals = 0
                             h_region_vals_lists.append(h_region_vals)
                             h_region_avg = "NaN"
-                        region_vals_lists.append([prot_name, q_range[0]+1, (q_range[1] - 1), q_region_avg, q_region_len, ## !! might need to change the -1 at end and/or +1 at start
-                            h_prot_name, h_range[0]+1, (h_range[1] - 1), h_region_avg, h_region_len])
+                        region_vals_lists.append([prot_name, q_range[0]+1, (q_range[1] - 1), q_region_avg, q_region_len, 
+                            h_prot_name, h_range[0]+1, (h_range[1]), h_region_avg, h_region_len])
         all_qsasa_df = pd.DataFrame(region_vals_lists, columns = ['q_prot', 'q_start', 'q_end', 
                                                                   'q_avg', 'q_length', 'h_prot', 
                                                                   'h_start', 'h_end', 'h_avg', 
@@ -547,6 +541,8 @@ class GreaterMimicDetection():
                                                                               result_type='expand')
         lcrfilt_df.round({'bitscore':1, 'e_value':5, 'pathogen_qsasa': 3, 'host_qsasa': 3}).to_csv(
             Path(outfile), sep='\t', header=True, index=False)
+        log_msg = f'Final molecular mimicry candidates saved to {outfile}\n'
+        write_log(self.log_file, log_msg)
         return 
 
 
