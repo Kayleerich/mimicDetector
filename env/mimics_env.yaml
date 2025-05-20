@@ -1,4 +1,4 @@
-name: snake_mimics
+name: mimics
 channels:
   - conda-forge
   - anaconda

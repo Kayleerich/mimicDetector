@@ -6,7 +6,7 @@ from pathlib import Path
 from Bio import SeqIO, Align
 from Bio.Align import substitution_matrices
 import glob
-from pybedtools import BedTool
+# from pybedtools import BedTool
 import sys
 import os
 
@@ -433,8 +433,8 @@ class MimicDetectionII():
                             h_region_vals = 0
                             h_region_vals_lists.append(h_region_vals)
                             h_region_avg = "NaN"
-                        region_vals_lists.append([prot_name, q_range[0], (q_range[1] - 1), q_region_avg, q_region_len, 
-                            h_prot_name, h_range[0], (h_range[1] - 1), h_region_avg, h_region_len])
+                        region_vals_lists.append([prot_name, q_range[0]+1, (q_range[1] - 1), q_region_avg, q_region_len, ## !! might need to change the -1 at end and/or +1 at start
+                            h_prot_name, h_range[0]+1, (h_range[1] - 1), h_region_avg, h_region_len])
         all_qsasa_df = pd.DataFrame(region_vals_lists, columns = ['q_prot', 'q_start', 'q_end', 
                                                                   'q_avg', 'q_length', 'h_prot', 
                                                                   'h_start', 'h_end', 'h_avg', 
@@ -449,39 +449,26 @@ class MimicDetectionII():
             all_qsasa_df.to_csv(all_qsasa_file, sep="\t", header=False, index=False)
             filt_qsasa_file=Path(self.outdir, self.patho_name, f"{self.patho_name}.{self.runidII}_filtered.tsv")
             qsasa_df_filtered.to_csv(filt_qsasa_file, sep="\t", header=False, index=False) 
-
-            log_msg = ''.join([all_qsasa_df.shape[0], 
-                               " paired regions before QSASA filtering",
-                               " saved to: \n\t", 
-                               str(all_qsasa_file),  
-                               qsasa_df_filtered.shape[0],
-                               " paired regions with minimum mean QSASA of 0.", 
-                               self.q_str, 
-                               " saved to: \n\t", 
-                               str(filt_qsasa_file), 
-                               "\n"])
-            # write_log(self.log_file, log_msg)
             return all_qsasa_file, filt_qsasa_file
         else:
-            log_msg = ''.join([all_qsasa_df.shape[0], 
-                               " paired regions before QSASA filtering\n", 
-                               qsasa_df_filtered.shape[0],
-                               " paired regions with minimum mean QSASA of 0.", 
-                               self.q_str, 
-                               "\n"])
-            # write_log(self.log_file, log_msg)
             return qsasa_df_filtered
         
     
 class GreaterMimicDetection():
     __gmd_vars = ('fileid', 'log_file', 'patho_name', 'host_name', 'control_name', 'k', 'bit_min', 
                   'bit_diff', 'b_str', 'min_e', 'e_str', 'qsasa', 'q_str', 'lcr', 'l_str', 'dbsize',
-                  'runidI', 'runidII', 'runidIII', 'outdir', 'indir')
+                  'runidI', 'runidII', 'runidIII', 'outdir', 'indir', 'matrix', 'lamb', 'kconst', 
+                  'gopen', 'gext')
     """
     mimicDetector final mimicry candidate filtering: LCR filtering 
 
     """
     def __init__(self, **kwargs):
+        self.matrix="PAM30"
+        self.lamb=0.339
+        self.kconst=0.28
+        self.gopen=-15
+        self.gext=-3
         for k, v in kwargs.items():
             try:
                 assert(k in self.__class__.__gmd_vars)
@@ -490,80 +477,76 @@ class GreaterMimicDetection():
                 pass
 
     def lcr_filter(self, qsasa_filtered, lcr_coords, host_fasta, pathogen_fasta, outfile):
+        # load QSASA-filtered mimicry candidate regions
         qfilt_df = pd.read_csv(qsasa_filtered, sep='\t', skip_blank_lines=True,
                                header=None, names=['pathogen_prot', 'pathogen_start',
                                                    'pathogen_end', 'pathogen_qsasa', 
                                                    'pathogen_length', 'host_prot', 
                                                    'host_start', 'host_end', 
                                                    'host_qsasa', 'host_length'])
-
-        seg_bed = BedTool(lcr_coords)
-        seg_df = seg_bed.to_dataframe()
-        seg_df.columns = ['host_prot', 'host_start', 'host_end']
-
-        qhfilt_bed = BedTool.from_dataframe(qfilt_df[['host_prot', 'host_start', 'host_end']])
-        hostlcr_bed = qhfilt_bed.intersect(seg_bed, wo=True, f=self.lcr, v=True)
-        hostlcr_df = hostlcr_bed.to_dataframe()
-        hostlcr_df.columns = ['host_prot', 'host_start', 'host_end']
-
-        paired_df = hostlcr_df.merge(qfilt_df, on=['host_prot', 'host_start', 'host_end'], how='right') 
-
-        pbed = BedTool.from_dataframe(paired_df[['pathogen_prot', 'pathogen_start', 'pathogen_end']])
-        hbed = BedTool.from_dataframe(paired_df[['host_prot', 'host_start', 'host_end']])
-                
-        hseqbed=f"{self.outdir}/{self.patho_name}/{self.patho_name}.{self.runidIII}_seqs_host"
-        pseqbed=f"{self.outdir}/{self.patho_name}/{self.patho_name}.{self.runidIII}_seqs_pathogen"
-
-        pseq_bed = pbed.sequence(fi=BedTool(pathogen_fasta), tab=True, fo=pseqbed) 
-        pseq_df= pd.read_csv(pseqbed, sep='\t', header=None, names=['chr', 'pathogen_sequence'])
-        pseq_df[['pathogen_prot','coords']] = pseq_df['chr'].str.split(':', expand=True)
-        pseq_df[['pathogen_start', 'pathogen_end']] = pseq_df['coords'].str.split('-', expand=True)
-        pseq_df = pseq_df[['pathogen_prot', 'pathogen_start', 'pathogen_end', 'pathogen_sequence']]
-        pseq_df[['pathogen_start', 'pathogen_end']] = pseq_df[['pathogen_start', 'pathogen_end']].astype(int)
-
-        hseq_bed = hbed.sequence(fi=BedTool(host_fasta), tab=True, fo=hseqbed)
-        hseq_df= pd.read_csv(hseqbed, sep='\t', header=None, names=['chr', 'host_sequence'])
-        hseq_df[['host_prot','coords']] = hseq_df['chr'].str.split(':', expand=True)
-        hseq_df[['host_start', 'host_end']] = hseq_df['coords'].str.split('-', expand=True)
-        hseq_df = hseq_df[['host_prot', 'host_start', 'host_end', 'host_sequence']]
-        hseq_df[['host_start', 'host_end']] = hseq_df[['host_start', 'host_end']].astype(int)
-        paired_df = paired_df.infer_objects()
-
-        hpaired_df = hseq_df.merge(paired_df, how='outer', on=['host_prot', 'host_start', 'host_end'])
-        filt_paired_df = pseq_df.merge(hpaired_df, how='inner', on=['pathogen_prot', 'pathogen_start', 
-                                                                    'pathogen_end']).round({'pathogen_qsasa': 3, 
-                                                                                            'host_qsasa': 3})
-        filt_paired_df = filt_paired_df[['pathogen_prot', 'pathogen_start', 'pathogen_end', 
-                                         'pathogen_sequence', 'pathogen_qsasa', 
-                                         'host_prot', 'host_start', 'host_end', 
-                                         'host_sequence', 'host_qsasa']]
+        # load all host LCR coordinates
+        seg_df = pd.read_csv(lcr_coords, sep='\t', header=None, names=['host_prot', 'seg_start', 'seg_end'])
+        # filter out mimicry candidates if the host region overlaps a LCR by more than given threahold
+        lcrfilt_df = qfilt_df.drop((qfilt_df.reset_index()
+                                    .merge(seg_df, how= 'left', on=['host_prot'])
+                                    .query('(host_start < seg_end) & (host_end > seg_start) & '
+                                        '(((host_end - seg_start)/(host_end - host_start + 1)) > @self.lcr)')
+                                        )['index'])
+        if lcrfilt_df.empty:
+            with open(Path(outfile), 'w') as f:
+                wrt_str = '\t'.join(['pathogen_prot', 'pathogen_start', 'pathogen_end', 
+                                     'pathogen_sequence', 'pathogen_qsasa', 'host_prot', 
+                                     'host_start', 'host_end', 'host_sequence', 'host_qsasa',
+                                     'bitscore', 'e_value'])
+                f.writelines(wrt_str)
+                return
         
-        def _aln(seq1, seq2, matrix="PAM30", lamb=0.339, kconst=0.28, gopen=-15, gext=-3):  
+        def _seq_records(pathfasta, prot_list):
+            record_dict = {}
+            for record in SeqIO.parse(pathfasta, 'fasta'):
+                if record.id in prot_list:
+                    record_dict[record.id] = record.seq
+            return record_dict
+        # make dicts for relevant pathogen/host protein sequences 
+        precords = _seq_records(pathogen_fasta, lcrfilt_df['pathogen_prot'].to_list())
+        hrecords = _seq_records(host_fasta, lcrfilt_df['host_prot'].to_list())
+        
+        def _subseq(prot, start, end, record_dict):
+            seq = record_dict[prot][start-1:end] 
+            return str(seq)
+        # extract pathogen/host mimicry candidate sequences
+        lcrfilt_df['pathogen_sequence'] = lcrfilt_df.apply(lambda x: _subseq(x.pathogen_prot, 
+                                                                              x.pathogen_start,
+                                                                              x.pathogen_end,
+                                                                              precords), 
+                                                                              axis = 1)
+        lcrfilt_df['host_sequence'] = lcrfilt_df.apply(lambda x: _subseq(x.host_prot, 
+                                                                         x.host_start,
+                                                                         x.host_end,
+                                                                         hrecords), 
+                                                                         axis = 1)
+        def _aln(seq1, seq2, dbsize=self.dbsize, 
+                 matrix=self.matrix, lamb=self.lamb, 
+                 kconst=self.kconst, gopen=self.gopen, 
+                 gext=self.gext):  
             """
             LAMBDA and K values retrieved from the BLASTP v2.16.0 stats table for PAM30
             """
             aligner = Align.PairwiseAligner()
+            aligner.mode = "local"
             aligner.substitution_matrix = substitution_matrices.load(matrix)
             aligner.open_gap_score = gopen
             aligner.extend_gap_score = gext
             bits = aligner.score(seq1, seq2)
             bitsc =  ((lamb*bits) - np.log(kconst))/ np.log(2)
-            evalue = kconst*len(seq1)*self.dbsize*(2.71828**(-lamb*bits))
+            evalue = kconst*len(seq1)*dbsize*(2.71828**(-lamb*bits))
             return bitsc, evalue
-        
-        filt_paired_df[['bitscore', 'e_value']] = filt_paired_df.apply(lambda x: _aln(x.pathogen_sequence, 
-                                                                                      x.host_sequence), 
-                                                                                      axis = 1, 
-                                                                                      result_type='expand'
-                                                                                      ).round({'bitscore':1, 'e_value':5})
-
-        # log_msg = ''.join([filt_paired_df.shape[0], 
-        #                    " paired regions with maximum LCR overlap of 0.", 
-        #                    self.l_str, 
-        #                    " saved to: \n\t", str(outfile), 
-        #                    "\n"])
-        # write_log(self.log_file, log_msg)
-        filt_paired_df.to_csv(Path(outfile), sep='\t', header=True, index=False)
+        # align pathogen/host sequences, calculate bitscore and E-value
+        lcrfilt_df[['bitscore', 'e_value']] = lcrfilt_df.apply(lambda x: _aln(x.pathogen_sequence, x.host_sequence), 
+                                                                              axis = 1, 
+                                                                              result_type='expand')
+        lcrfilt_df.round({'bitscore':1, 'e_value':5, 'pathogen_qsasa': 3, 'host_qsasa': 3}).to_csv(
+            Path(outfile), sep='\t', header=True, index=False)
         return 
 
 

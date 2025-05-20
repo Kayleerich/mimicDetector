@@ -160,14 +160,14 @@ def get_ppops_files(wildcards):
     indir=f'{config["indir"]}/{wildcards.pathogen}/structures/'
     outstr=f'{wildcards.outdir}/{wildcards.pathogen}/pops/pops_'
     pstruct=[''.join([indir, f]) for f in os.listdir(indir) if Path(''.join([indir, f])).exists()]
-    ppops=[p.replace(indir, outstr).replace('.pdb', '.out') for p in pstruct]
+    ppops=[p.replace(indir, outstr).replace('.pdb', '.out').replace('.gz', '') for p in pstruct]
     return ppops
 
 def get_hpops_files(wildcards):
     indir=f'{config["indir"]}/host/structures/'
     outstr=f'{wildcards.outdir}/host/pops/pops_'
     hstruct=[''.join([indir, f]) for f in os.listdir(indir) if Path(''.join([indir, f])).exists()]
-    hpops=[p.replace(indir, outstr).replace('.pdb', '.out') for p in hstruct]
+    hpops=[p.replace(indir, outstr).replace('.pdb', '.out').replace('.gz', '') for p in hstruct]
     return hpops
 
 rule filter_qsasa:
@@ -187,6 +187,14 @@ rule filter_qsasa:
     script:
         "scripts/filt_qsasa.py"
 
+rule clean:
+    input:
+        pflags=expand("{outdir}/{pathogen}/ppops_flag.out", pathogen=PATHOGENS, outdir=config['outdir']), 
+        hflag=rules.run_host_popscomp.output,
+        b="popsb.out",
+        s="sigma.out"
+    shell:
+        "rm {input.b} {input.s}"
 
 # low complexity sequence filtering: GreaterMimicDetection
 rule get_host_lcrs:
@@ -217,8 +225,6 @@ rule filter_lcrs:
         pfa=config['indir']+"/{pathogen}/{pathogen}.fasta",
         segbed= rules.convert_host_lcrs.output.segbed 
     output:
-        hseqbed=temp("{outdir}/{pathogen}/{pathogen}.{id}.{k}mers_b{b}_e{e}_q{q}_l{l}_seqs_host"),
-        pseqbed=temp("{outdir}/{pathogen}/{pathogen}.{id}.{k}mers_b{b}_e{e}_q{q}_l{l}_seqs_pathogen"),
         pairs="{outdir}/{pathogen}/{pathogen}.{id}.{k}mers_b{b}_e{e}_q{q}_l{l}_paired_mimics.tsv" 
     script:
         "scripts/filt_lcr.py"

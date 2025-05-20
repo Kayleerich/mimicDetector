@@ -88,13 +88,13 @@ def make_config_file(args):
                                                                                                               os.listdir(config_dict['indir'])) if d not in ['host', 'controls']]
         config_dict['host_name'] = args.host_species if args.host_species else [d.split('/')[-1].split('.')[0] for d in glob.glob(f"{config_dict['indir']}/host/*.fa*")][0]
         config_dict['control_species'] = args.control_species if args.control_species else [d.split('/')[-1].split('.')[0] for d in glob.glob(f"{config_dict['indir']}/controls/*.fa*")]
-        config_dict['control_name'] = args.control_name if args.control_name else f"{len(args.control_species)}CtrlSpp" if len(args.control_species) > 1 else args.control_species[0]
+        config_dict['control_name'] = args.control_name if args.control_name else f"Controls" if len(args.control_species) > 1 else args.control_species[0]
         config_dict['k'] = int(args.k_size) if args.k_size else int(12)
         config_dict['n'] = int(round(args.min_unmasked)) if args.min_unmasked else int(round(config_dict['k']/2))
         config_dict['mask'] = args.mask if args.mask else 'lowercase'
         config_dict['fileid'] = f"{args.fileid}.{config_dict['k']}mers_" if args.fileid else f"{config_dict['host_name']}.{config_dict['k']}mers_"
         config_dict['outdir'], config_file, config_dict['log_file'] = _check_output(args.outdir, config_dict['fileid'], args.force)
-        config_dict['bit_min'] = int(args.min_bitscore) if args.min_bitscore else int(30)
+        # config_dict['bit_min'] = int(args.min_bitscore) if args.min_bitscore else int(30)
         config_dict['bit_diff'] = int(args.bitscore_diff) if args.bitscore_diff else int(2)
         config_dict ['min_e'] = args.min_evalue if args.min_evalue else 0.01
         config_dict['qsasa'] = args.min_qsasa if args.min_qsasa else 0.50
@@ -112,13 +112,15 @@ def make_config_file(args):
 
     
     # combine all control species fasta files into single file
-    control_files = [Path(f"{config_dict['indir']}/controls", f'{f}.fasta') for f in config_dict['control_species']]
     cat_fasta = f"{config_dict['indir']}/controls/{config_dict['control_name']}.fasta"
-    with open(cat_fasta, 'a') as c:
-        for file in control_files:
-            with open(file, "r") as f:
-                fasta = f.read()
-                c.write(fasta)
+    control_files = [Path(f"{config_dict['indir']}/controls", f'{f}.fasta') for f in config_dict['control_species']]
+    if not Path(db_file).exists():
+        with open(cat_fasta, 'w') as outfile:
+            for fname in control_files:
+                with open(fname) as infile:
+                    outfile.write(infile.read())
+    else:
+        print(f'Warning: a new combined control FASTA file was not created because the file {cat_fasta} already exists')
     
 
     # check that host and control fasta files exist and get combined database size

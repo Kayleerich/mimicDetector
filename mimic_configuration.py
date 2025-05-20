@@ -24,8 +24,8 @@ if __name__ == '__main__':
                         help='INT, Length of k-mer, i.e. sequence fragment, to use (default is k=12)')
     parser.add_argument('-b', '--bitscore_diff', metavar='', type=int, required=False, 
                         help='NUM >=0, Minimum difference in bitscore between pathogen-host and pathogen-control blastp hits (default is b=2)')
-    parser.add_argument('--min_bitscore', metavar='', type=int, required=False, 
-                        help='NUM >=0, Minimum bitscore allowed for pathogen-host blastp hits (default is 30)') 
+    # parser.add_argument('--min_bitscore', metavar='', type=int, required=False, 
+    #                     help='NUM >=0, Minimum bitscore allowed for pathogen-host blastp hits (default is 30)') 
     parser.add_argument('-e', '--min_evalue', metavar='', type=float, required=False, 
                         help='FLOAT between 0 and 1, Maximum E-value allowed for pathogen-host blastp hits (default is e=0.01)')
     parser.add_argument('-q', '--min_qsasa', metavar='', type=float, required=False, 
