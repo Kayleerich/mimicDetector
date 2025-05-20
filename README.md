@@ -16,7 +16,7 @@ conda activate mimics
   
 Run a test with the test data:
 ```
-python mimicDetector/mimic_configuration.py -p pathogen_1 pathogen_2 -s host -c controls_1 controls_2 -i test_data/ -f test -o mimicDetector_results/test
+python mimicDetector/mimic_configuration.py -p pathogen_1 pathogen_2 -s host -c controls_1 controls_2 -i mimicDetector/test_data/ -f test -o mimicDetector_results/test
 snakemake -s mimicDetector/mimicDetector.smk --configfile mimicDetector_results/test/config.yaml --cores 1 
 ```
 The test will output multiple files for both pathogen_1 and pathogen_2. If the test ran successfully, pathogen_1 should have [1 result after LCR filtering](test_data/test_results/pathogen_1.test.12mers_b2_e01_q50_l75_paired_mimics.tsv) and pathogen_2 should have [2 results after QSASA filtering](test_data/test_results/pathogen_2.test.12mers_b2_e01_q50_filtered.tsv) but [0 results after LCR filtering](test_data/test_results/pathogen_2.test.12mers_b2_e01_q50_l75_paired_mimics.tsv).  
@@ -115,8 +115,8 @@ The final output (_paired_mimics.tsv) contains 12 columns (see [file description
 |   │   ├── pathogenA_name.fileID.12mers_blastp.out
 |   │   ├── pathogenA_name.fileID.12mers_b2_e01_hcfiltered_blastp.out
 |   │   ├── pathogenA_name.fileID.12mers_b2_e01_qsasa_averages.tsv
-|   │   ├── pathogenA_name.fileID.12mers_b2_e01_q75_filtered.tsv
-|   │   ├── pathogenA_name.fileID.12mers_b2_e01_q75_l50_paired_mimics.tsv
+|   │   ├── pathogenA_name.fileID.12mers_b2_e01_q50_filtered.tsv
+|   │   ├── pathogenA_name.fileID.12mers_b2_e01_q50_l75_paired_mimics.tsv
 |   │   ├── pops
 |   │   │   ├── pops_protA1.out
 |   │   │   ├── pops_protA2.out

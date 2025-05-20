@@ -1,1 +1,2 @@
-pathogen_prot	pathogen_start	pathogen_end	pathogen_sequence	pathogen_qsasa	host_prot	host_start	host_end	host_sequence	host_qsasa	bitscore	e_value
+pathogen_prot	pathogen_start	pathogen_end	pathogen_qsasa	pathogen_length	host_prot	host_start	host_end	host_qsasa	host_length	pathogen_sequence	host_sequence	bitscore	e_value
+I6WYT7	287	294	0.516	8	Q9P2E3	318	325	0.586	8	TTTLVQPE	TYTLVQPE	24.3	0.00987

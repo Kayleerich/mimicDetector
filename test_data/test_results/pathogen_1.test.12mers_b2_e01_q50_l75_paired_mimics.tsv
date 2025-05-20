@@ -1,2 +1,2 @@
 pathogen_prot	pathogen_start	pathogen_end	pathogen_qsasa	pathogen_length	host_prot	host_start	host_end	host_qsasa	host_length	pathogen_sequence	host_sequence	bitscore	e_value
-I6WXS6	56	64	0.536	9	P48634	442	450	0.662	10	PEDRAEAWR	PEDEDEAWR	24.8	0.00791
+I6WXS6	56	64	0.536	9	P48634	442	450	0.694	9	PEDRAEAWR	PEDEDEAWR	24.8	0.00791

@@ -215,7 +215,7 @@ class MimicDetectionI():
                 kstart = int(kcoords.split(':')[0]) - 1
                 kend = int(kcoords.split(':')[1])
                 qstart = (kstart + int(ln[6]))
-                qend = kend - (self.k - int(ln[7])) + 1
+                qend = kend - (self.k - int(ln[7]))
                 query_range = [qstart, qend]
                 try:
                     coords_dict[pair]['query'].append(query_range)
@@ -224,7 +224,7 @@ class MimicDetectionI():
                     coords_dict[pair]['query'] = [query_range]
 
                 hstart = (int(ln[8]) - 1)
-                hend = int(ln[9]) + 1
+                hend = int(ln[9])
                 host_range = [hstart, hend]
                 try:
                     coords_dict[pair]['host'].append(host_range)
@@ -427,7 +427,7 @@ class MimicDetectionII():
                             h_region_vals = 0
                             h_region_vals_lists.append(h_region_vals)
                             h_region_avg = "NaN"
-                        region_vals_lists.append([prot_name, q_range[0]+1, (q_range[1] - 1), q_region_avg, q_region_len, 
+                        region_vals_lists.append([prot_name, q_range[0]+1, (q_range[1]), q_region_avg, q_region_len, 
                             h_prot_name, h_range[0]+1, (h_range[1]), h_region_avg, h_region_len])
         all_qsasa_df = pd.DataFrame(region_vals_lists, columns = ['q_prot', 'q_start', 'q_end', 
                                                                   'q_avg', 'q_length', 'h_prot', 

@@ -114,7 +114,7 @@ def make_config_file(args):
     # combine all control species fasta files into single file
     cat_fasta = f"{config_dict['indir']}/controls/{config_dict['control_name']}.fasta"
     control_files = [Path(f"{config_dict['indir']}/controls", f'{f}.fasta') for f in config_dict['control_species']]
-    if not Path(db_file).exists():
+    if not Path(cat_fasta).exists():
         with open(cat_fasta, 'w') as outfile:
             for fname in control_files:
                 with open(fname) as infile:
