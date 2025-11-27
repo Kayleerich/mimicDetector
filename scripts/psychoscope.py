@@ -539,7 +539,7 @@ class GreaterMimicDetection():
         lcrfilt_df[['bitscore', 'e_value']] = lcrfilt_df.apply(lambda x: _aln(x.pathogen_sequence, x.host_sequence), 
                                                                               axis = 1, 
                                                                               result_type='expand')
-        lcrfilt_df.round({'bitscore':1, 'e_value':5, 'pathogen_qsasa': 3, 'host_qsasa': 3}).to_csv(
+        lcrfilt_df[lcrfilt_df['e_value']<=self.min_e].round({'bitscore':1, 'e_value':5, 'pathogen_qsasa': 3, 'host_qsasa': 3}).to_csv(
             Path(outfile), sep='\t', header=True, index=False)
         log_msg = f'Final molecular mimicry candidates saved to {outfile}\n'
         write_log(self.log_file, log_msg)
