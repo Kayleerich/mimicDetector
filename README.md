@@ -1,6 +1,7 @@
 # mimicDetector
 mimicDetector is a Snakemake pipeline for identifying short regions of pathogen proteins that share high sequence similarity to proteins of their host.  
-This is the companion code for the preprint available on bioRxiv: [mimicDetector: a pipeline for protein motif mimicry detection in host-pathogen systems](https://doi.org/10.1101/2025.05.02.651971)
+If you use this pipeline, please cite: [mimicDetector: a pipeline for protein motif mimicry detection in host-pathogen interactions](https://academic.oup.com/bioinformatics/article/42/2/btag012/8423033).   
+
   
 ## Running the pipeline
 mimicDetector requires Python ≥ 3.6 as well as pre-installation of [POPScomp](https://github.com/Fraternalilab/POPScomp). All other required programs/packages can be found in the [mimics_env.yaml](env/mimics_env.yaml) file. The pipeline is implemented via Snakemake and requires a custom configuration file to be passed using [`--configfile`](#create-the-configuration-file-for-mimicdetector).  
