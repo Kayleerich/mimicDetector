@@ -1,3 +1,9 @@
+# ===============================================================================
+# utils.py : basic functions for mimicDetector
+# Copyright (C) 2024 Kaylee D. Rich
+# Read the COPYING file for license information.
+# ================================================================================
+
 from pathlib import Path
 import os
 import glob
