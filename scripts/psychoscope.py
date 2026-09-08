@@ -1,3 +1,9 @@
+# ===============================================================================
+# psychoscope.py : class functions for mimicDetector
+# Copyright (C) 2024 Kaylee D. Rich
+# Read the COPYING file for license information.
+# ================================================================================
+
 import numpy as np
 from utils import write_log
 import re
