@@ -1,3 +1,9 @@
+# ===============================================================================
+# filt_qsasa.py : call functions to filter by solvent accessibility for mimicDetector
+# Copyright (C) 2024 Kaylee D. Rich
+# Read the COPYING file for license information.
+# ================================================================================
+
 from psychoscope import MimicDetectionI
 from psychoscope import MimicDetectionII
 
