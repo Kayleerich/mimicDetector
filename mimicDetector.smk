@@ -1,3 +1,9 @@
+# ===============================================================================
+# mimicDetector.smk : Snakemake rules for running mimicDetector
+# Copyright (C) 2024 Kaylee D. Rich
+# Read the COPYING file for license information.
+# ================================================================================
+
 import os
 import glob
 import pandas as pd
