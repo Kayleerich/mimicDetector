@@ -1,6 +1,5 @@
 # mimicDetector
-mimicDetector is a Snakemake pipeline for identifying short regions of pathogen proteins that share high sequence similarity to proteins of their host.  
-If you use this pipeline, please cite: [mimicDetector: a pipeline for protein motif mimicry detection in host-pathogen interactions](https://academic.oup.com/bioinformatics/article/42/2/btag012/8423033).   
+mimicDetector is a Snakemake pipeline for identifying short regions of pathogen proteins that share high sequence similarity to proteins of their host. If you use this pipeline, please cite: [mimicDetector: a pipeline for protein motif mimicry detection in host-pathogen interactions](https://academic.oup.com/bioinformatics/article/42/2/btag012/8423033).   
 
   
 ## Running the pipeline
@@ -146,7 +145,9 @@ After data selection, the pipeline filtering thresholds can be modified to furth
 To increase the number of mimicry candidates obtained, the first parameter change recommended is the solvent accessibility threshold (q). Decreasing this value will increase the number of candidates in the final results without compromising quality (i.e. increased low complexity sequences). A q threshold greater than 0.5 indicates that the majority of the mimicry region is accessible for protein-protein interactions. However, low mean solvent accessibility for a given mimicry candidate may indicate that fewer residues are involved in mimicry interactions, so these candidates should be further screened for similarity between the accessible residues. Changing either E-value (e) or LCR content (l) thresholds will affect the quality of the final mimicry candidates. Decreasing l will allow for more mimicry candidates that overlap low complexity sequences in the final results. Increasing e will have a similar effect by permitting sequences with reduced statistical relevance. 
   
 Decreasing either bits difference threshold (b) or k-mer size (k) is not recommended. Lowering b will result in mimicry candidates closely related to a control, and decreasing k will eliminate any statistical relevance of the BLASTP E-values. However, k may be increased at the expense of increased time and memory usage, though this should not be done without also adjusting b and e. To decrease in the number of final mimicry candidates, increasing b and/or decreasing e is recommended. If the pathogen is closely related to host, we recommend increasing b to ensure greater distinction between the potential mimic and a control sequence. 
+  
 
-
-Copyright © 2024-2026 Kaylee D. Rich, contact: kayd.rich at gmail dot com
+### Citation and licensing
+Copyright © 2024-2026 Kaylee D. Rich, contact: kayd.rich at gmail dot com  
+Citation: Rich KD, Wasmuth JD. (2026) mimicDetector: a bioinformatics approach to identify and understand host-pathogen molecular mimicry. Bioinformatics, Volume 42, Issue 2. [https://doi.org/10.1093/bioinformatics/btag012](https://academic.oup.com/bioinformatics/article/42/2/btag012/8423033).   
 Usage of the software and server is free under the GNU General Public License v3.0. See COPYING file for license information. 
