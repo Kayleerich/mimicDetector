@@ -1,3 +1,9 @@
+# ===============================================================================
+# filt_lcrs.py : call functions to filter LCRs for mimicDetector
+# Copyright (C) 2024 Kaylee D. Rich
+# Read the COPYING file for license information.
+# ================================================================================
+
 from psychoscope import GreaterMimicDetection
 
 config_dict = snakemake.config
