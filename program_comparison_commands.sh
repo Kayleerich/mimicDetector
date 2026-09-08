@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# ======================================================================================================
+# program_comparison_commands.sh : commands used for benchmarking tools during mimicDetector development
+# Copyright (C) 2024 Kaylee D. Rich
+# Read the COPYING file for license information.
+# ======================================================================================================
+
 # Script variables: 
 # ${DB} = Database prefix 
 # ${QUERY} = Query file prefix 
