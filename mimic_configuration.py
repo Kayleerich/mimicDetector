@@ -1,3 +1,9 @@
+# ===============================================================================
+# mimic_configuration.py : create configuration file for running mimicDetector
+# Copyright (C) 2024 Kaylee D. Rich
+# Read the COPYING file for license information.
+# ================================================================================
+
 import argparse
 from scripts.utils import make_config_file
 
